@@ -21,28 +21,33 @@ fn main() -> Result<(), io::Error> {
 
     terminal.draw(ui)?;
 
-    thread::sleep(Duration::from_millis(5000));
+    // thread::sleep(Duration::from_millis(5000));
 
     // restore terminal
-    disable_raw_mode()?;
-    execute!(
-        terminal.backend_mut(),
-        LeaveAlternateScreen,
-        DisableMouseCapture
-    )?;
-    terminal.show_cursor()?;
+    // disable_raw_mode()?;
+    // execute!(
+    //     terminal.backend_mut(),
+    //     LeaveAlternateScreen,
+    //     DisableMouseCapture
+    // )?;
+    // terminal.show_cursor()?;
 
     Ok(())
 }
 
 fn ui<B: Backend>(f: &mut Frame<B>) {
-    let third =
-        |c| tui::layout::Rect::new(f.size().x + (f.size().width / 3 * c), f.size().y, f.size().width / 3, f.size().height);
+    let third = |c| {
+        tui::layout::Rect::new(
+            f.size().x + (f.size().width / 3 * c),
+            f.size().y,
+            f.size().width / 3,
+            f.size().height,
+        )
+    };
 
     let layout = |n| {
         Layout::default()
             .direction(Direction::Vertical)
-            .margin(1)
             .constraints(
                 [
                     Constraint::Length(10),
@@ -59,16 +64,30 @@ fn ui<B: Backend>(f: &mut Frame<B>) {
     let ttt1 = layout(1);
     let ttt2 = layout(2);
 
-    let block = Block::default().title("Block").borders(Borders::ALL);
-    f.render_widget(block.clone(), ttt[0]);
-    f.render_widget(block.clone(), ttt1[0]);
-    f.render_widget(block, ttt2[0]);
-    let block = Block::default().title("Block 2").borders(Borders::ALL);
+    let block = Block::default().title("1").borders(Borders::BOTTOM);
+    f.render_widget(
+        block.clone(),
+        ttt[0],
+    );
+    f.render_widget(block.clone().title("2").borders(Borders::LEFT | Borders::RIGHT | Borders::BOTTOM), ttt1[0]);
+    f.render_widget(
+        block.title("3"),
+        ttt2[0],
+    );
+
+    let block = Block::default().title("4");
     f.render_widget(block.clone(), ttt[1]);
-    f.render_widget(block.clone(), ttt1[1]);
-    f.render_widget(block, ttt2[1]);
-    let block = Block::default().title("Block 3").borders(Borders::ALL);
+    f.render_widget(block.clone().title("5").borders(Borders::LEFT | Borders::RIGHT), ttt1[1]);
+    f.render_widget(block.title("6"), ttt2[1]);
+
+    let block = Block::default().title("7").borders(Borders::TOP);
     f.render_widget(block.clone(), ttt[2]);
-    f.render_widget(block.clone(), ttt1[2]);
-    f.render_widget(block, ttt2[2]);
+    f.render_widget(
+        block
+            .clone()
+            .borders(Borders::LEFT | Borders::RIGHT | Borders::TOP)
+            .title("8"),
+        ttt1[2],
+    );
+    f.render_widget(block.title("9"), ttt2[2]);
 }
