@@ -15,6 +15,10 @@ impl Board {
             current: [[None, None, None], [None, None, None], [None, None, None]],
         }
     }
+
+    fn is_complete(&self) -> bool {
+        self.current.iter().flatten().all(|m| m.is_some())
+    }
 }
 
 struct Player<'a> {
@@ -46,7 +50,25 @@ mod tests {
 
         Player::new(&mut board).play(Move::O, 1, 2);
         assert_eq!(board.current[1][2], Some(Move::O));
+    }
 
-        println!("{:?}", board);
+    #[test]
+    fn test_board_is_complete() {
+        let mut board = Board::new();
+        assert!(!board.is_complete());
+
+        let x = || Some(Move::X);
+
+        board.current = [[x(), x(), x()], [x(), x(), x()], [x(), x(), x()]];
+
+        assert!(board.is_complete());
+
+        board.current = [[x(), None, x()], [x(), x(), x()], [x(), x(), x()]];
+
+        assert!(!board.is_complete());
+
+        board.current = [[x(), x(), x()], [x(), None, x()], [x(), x(), x()]];
+
+        assert!(!board.is_complete());
     }
 }
