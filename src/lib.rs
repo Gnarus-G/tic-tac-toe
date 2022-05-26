@@ -1,4 +1,3 @@
-
 #[derive(Debug, PartialEq)]
 enum Move {
     X,
@@ -43,19 +42,18 @@ impl Board {
 
         row_lines.append(&mut column_lines);
 
-        //left diagonal?
-        if row_indeces_iter()
-            .map(|n| &self.current[n][n])
+        let left_diagonal_iter = row_indeces_iter.clone();
+        if 
+            left_diagonal_iter().map(|n| &self.current[n][n])
             .all(|m| m.is_some() && *m == self.current[0][0])
         {
-            row_lines.push(row_indeces_iter().map(|n| (n, n)).collect());
+            row_lines.push(left_diagonal_iter().map(|n| (n, n)).collect());
         }
 
-        //right diagonal?
         let right_diag_line_iter = || {
             row_indeces_iter()
                 .rev()
-                .zip(colum_indeces_iter().inspect(|t| println!("c {:?}", t)))
+                .zip(colum_indeces_iter())
         };
 
         if right_diag_line_iter()
