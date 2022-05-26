@@ -1,3 +1,5 @@
+use std::iter;
+
 #[derive(Debug, PartialEq)]
 enum Move {
     X,
@@ -19,51 +21,39 @@ impl Board {
     pub fn check_lines(&mut self) -> Vec<Vec<(usize, usize)>> {
         let row_indeces_iter = || 0..self.current.len();
         let colum_indeces_iter = || 0..self.current[0].len();
+        let is_all_x = |line: &Vec<(usize, usize)>| {
+            line.iter()
+                .all(|(i, j)| self.current[*i][*j] == Some(Move::X))
+        };
+        let is_all_o = |line: &Vec<(usize, usize)>| {
+            line.iter()
+                .all(|(i, j)| self.current[*i][*j] == Some(Move::O))
+        };
 
-        let mut row_lines: Vec<Vec<(usize, usize)>> = self
+        let row_lines = self
             .current
             .iter()
             .zip(row_indeces_iter())
-            .filter(|(row, _)| row.iter().any(|m| m.is_some())) //contains some move in row
-            .filter(|(row, _)| row.iter().all(|m| *m == row[0]))
-            .map(|(row, row_idx)| (0..row.len()).map(|col_idx| (row_idx, col_idx)).collect())
-            .collect();
+            .map(|(row, row_idx)| (0..row.len()).map(|col_idx| (row_idx, col_idx)).collect());
 
-        let mut column_lines: Vec<Vec<(usize, usize)>> = (row_indeces_iter())
+        let column_lines = row_indeces_iter()
             .map(|col_idx| {
                 ((colum_indeces_iter()).map(|i| &self.current[i][col_idx]))
                     .collect::<Vec<&Option<Move>>>()
             })
             .zip(row_indeces_iter())
-            .filter(|(col, _)| col.iter().any(|&m| m.is_some())) //contains some move in column
-            .filter(|(col, _)| col.iter().all(|&m| *m == *col[0]))
-            .map(|(col, col_idx)| (0..col.len()).map(|row_idx| (row_idx, col_idx)).collect())
-            .collect();
+            .map(|(col, col_idx)| (0..col.len()).map(|row_idx| (row_idx, col_idx)).collect());
 
-        row_lines.append(&mut column_lines);
+        let left_diagonal_line = row_indeces_iter().map(|n| (n, n)).collect();
 
-        let left_diagonal_iter = row_indeces_iter.clone();
-        if 
-            left_diagonal_iter().map(|n| &self.current[n][n])
-            .all(|m| m.is_some() && *m == self.current[0][0])
-        {
-            row_lines.push(left_diagonal_iter().map(|n| (n, n)).collect());
-        }
-
-        let right_diag_line_iter = || {
-            row_indeces_iter()
-                .rev()
-                .zip(colum_indeces_iter())
-        };
-
-        if right_diag_line_iter()
-            .map(|(i, j)| &self.current[i][j])
-            .all(|m| m.is_some() && *m == self.current[0][2])
-        {
-            row_lines.push(right_diag_line_iter().collect());
-        }
+        let right_diagonal_line = row_indeces_iter().rev().zip(colum_indeces_iter()).collect();
 
         row_lines
+            .chain(column_lines)
+            .chain(iter::once(left_diagonal_line))
+            .chain(iter::once(right_diagonal_line))
+            .filter(|l| is_all_x(l) || is_all_o(l))
+            .collect()
     }
 
     fn is_complete(&self) -> bool {
@@ -130,7 +120,7 @@ mod tests {
     }
 
     #[test]
-    fn test_winning_lines() {
+    fn test_no_winning_lines_on_blank_board() {
         let mut board = Board::new();
         let no_lines: Vec<Vec<(usize, usize)>> = vec![];
         assert_eq!(board.check_lines(), no_lines);
