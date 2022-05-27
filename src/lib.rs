@@ -1,4 +1,4 @@
-use std::iter;
+use std::{error::Error, fmt::Display, iter};
 
 #[derive(Debug, PartialEq)]
 enum Move {
@@ -10,6 +10,9 @@ enum Move {
 struct Board {
     current: [[Option<Move>; 3]; 3],
 }
+
+#[derive(Debug)]
+struct PlayOnCompleteBoardError;
 
 impl Board {
     pub fn new() -> Board {
@@ -69,8 +72,25 @@ impl<'a> Player<'a> {
     pub fn new(board: &'a mut Board) -> Player<'a> {
         Player { board }
     }
-    pub fn play(mut self, xo: Move, row: usize, col: usize) {
+    pub fn play(
+        mut self,
+        xo: Move,
+        row: usize,
+        col: usize,
+    ) -> Result<(), PlayOnCompleteBoardError> {
+        if self.board.is_complete() {
+            return Err(PlayOnCompleteBoardError {});
+        }
         self.board.current[row][col] = Some(xo);
+        Ok(())
+    }
+}
+
+impl Error for PlayOnCompleteBoardError {}
+
+impl Display for PlayOnCompleteBoardError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Can't play on an already complete board!")
     }
 }
 
@@ -99,6 +119,16 @@ mod tests {
 
         Player::new(&mut board).play(Move::O, 1, 2);
         assert_eq!(board.current[1][2], Some(Move::O));
+    }
+
+    #[test]
+    fn test_play_on_on_complete_board() {
+        let mut board = Board::new();
+        board.current = [[x(), x(), x()], [x(), x(), x()], [x(), x(), x()]];
+
+        let result = Player::new(&mut board).play(Move::X, 0, 0);
+
+        assert!(result.is_err());
     }
 
     #[test]
