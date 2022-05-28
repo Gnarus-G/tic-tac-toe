@@ -1,18 +1,24 @@
 use std::{error::Error, fmt::Display, iter};
 
 #[derive(Debug, PartialEq)]
-enum Move {
+pub enum Move {
     X,
     O,
 }
 
-#[derive(Debug)]
-struct Board {
-    current: [[Option<Move>; 3]; 3],
+impl Display for Move {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Move::X => write!(f, "X"),
+            Move::O => write!(f, "O"),
+        }
+    }
 }
 
 #[derive(Debug)]
-struct PlayOnCompleteBoardError;
+pub struct Board {
+    current: [[Option<Move>; 3]; 3],
+}
 
 impl Board {
     pub fn new() -> Board {
@@ -64,7 +70,34 @@ impl Board {
     }
 }
 
-struct Player<'a> {
+impl Display for Board {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut disp = String::new();
+
+        //write column number labels
+        disp.push_str(" \\ ");
+        for i in 0..self.current.len() {
+            disp.push_str(&format!(" {} ", i));
+        }
+        disp.push('\n');
+
+        //write each row starting with row index label
+        for (i, row) in self.current.iter().enumerate() {
+            disp.push_str(&format!(" {} ", i));
+            for m in row {
+                match m {
+                    None => disp.push_str(" _ "),
+                    Some(m) => disp.push_str(&format!(" {} ", m)),
+                }
+            }
+            disp.push('\n');
+        }
+
+        write!(f, "{}", disp)
+    }
+}
+
+pub struct Player<'a> {
     board: &'a mut Board,
 }
 
@@ -85,6 +118,9 @@ impl<'a> Player<'a> {
         Ok(())
     }
 }
+
+#[derive(Debug)]
+pub struct PlayOnCompleteBoardError;
 
 impl Error for PlayOnCompleteBoardError {}
 
