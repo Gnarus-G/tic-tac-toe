@@ -27,6 +27,14 @@ impl Board {
         }
     }
 
+    pub fn set_at(&mut self, m: Move, (row, col): (usize, usize)) {
+        self.current[row][col] = Some(m);
+    }
+
+    pub fn rows(&self) -> std::slice::Iter<[Option<Move>; 3]> {
+        self.current.iter()
+    }
+
     pub fn check_lines(&mut self) -> Vec<Vec<(usize, usize)>> {
         let row_indeces_iter = || 0..self.current.len();
         let colum_indeces_iter = || 0..self.current[0].len();
@@ -42,16 +50,16 @@ impl Board {
         let row_lines = self
             .current
             .iter()
-            .zip(row_indeces_iter())
-            .map(|(row, row_idx)| (0..row.len()).map(|col_idx| (row_idx, col_idx)).collect());
+            .enumerate()
+            .map(|(row_idx, row)| (0..row.len()).map(|col_idx| (row_idx, col_idx)).collect());
 
         let column_lines = row_indeces_iter()
             .map(|col_idx| {
                 ((colum_indeces_iter()).map(|i| &self.current[i][col_idx]))
                     .collect::<Vec<&Option<Move>>>()
             })
-            .zip(row_indeces_iter())
-            .map(|(col, col_idx)| (0..col.len()).map(|row_idx| (row_idx, col_idx)).collect());
+            .enumerate()
+            .map(|(col_idx, col)| (0..col.len()).map(|row_idx| (row_idx, col_idx)).collect());
 
         let left_diagonal_line = row_indeces_iter().map(|n| (n, n)).collect();
 
@@ -75,15 +83,22 @@ impl Display for Board {
         let mut disp = String::new();
 
         //write column number labels
-        disp.push_str(" \\ ");
+        disp.push_str("  |");
         for i in 0..self.current.len() {
             disp.push_str(&format!(" {} ", i));
         }
         disp.push('\n');
-
+        
+        //adding an extra line of separators
+        disp.push_str(" --");
+        for _ in 0..self.current.len() {
+            disp.push_str(&format!("---"));
+        }
+        disp.push('\n');
+ 
         //write each row starting with row index label
         for (i, row) in self.current.iter().enumerate() {
-            disp.push_str(&format!(" {} ", i));
+            disp.push_str(&format!(" {}|", i));
             for m in row {
                 match m {
                     None => disp.push_str(" _ "),
@@ -97,17 +112,16 @@ impl Display for Board {
     }
 }
 
-pub struct Player<'a> {
+pub struct Player {
     move_as: Move,
-    board: &'a mut Board,
 }
 
-impl<'a> Player<'a> {
-    pub fn new(board: &'a mut Board, move_as: Move) -> Player<'a> {
-        Player { board, move_as }
+impl Player {
+    pub fn new(move_as: Move) -> Player {
+        Player { move_as }
     }
-    pub fn play(&mut self,  row: usize, col: usize) {
-        self.board.current[row][col] = Some(self.move_as);
+    pub fn play(&mut self, board: &mut Board, row: usize, col: usize) {
+        board.set_at(self.move_as, (row, col));
     }
 }
 
@@ -127,14 +141,15 @@ mod tests {
     #[test]
     fn test_play_at_position() {
         let mut board = Board::new();
+        let mut x = Player::new(Move::X);
+        x.play(&mut board, 0, 0);
+        x.play(&mut board, 2, 1);
 
-        Player::new(&mut board).play(Move::X, 0, 0);
+        let mut o = Player::new(Move::O);
+        o.play(&mut board, 1, 2);
+
         assert_eq!(board.current[0][0], Some(Move::X));
-
-        Player::new(&mut board).play(Move::X, 2, 1);
         assert_eq!(board.current[2][1], Some(Move::X));
-
-        Player::new(&mut board).play(Move::O, 1, 2);
         assert_eq!(board.current[1][2], Some(Move::O));
     }
 
