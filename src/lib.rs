@@ -88,14 +88,14 @@ impl Display for Board {
             disp.push_str(&format!(" {} ", i));
         }
         disp.push('\n');
-        
+
         //adding an extra line of separators
         disp.push_str(" --");
         for _ in 0..self.current.len() {
             disp.push_str(&format!("---"));
         }
         disp.push('\n');
- 
+
         //write each row starting with row index label
         for (i, row) in self.current.iter().enumerate() {
             disp.push_str(&format!(" {}|", i));
@@ -112,6 +112,17 @@ impl Display for Board {
     }
 }
 
+#[derive(Debug)]
+pub struct InvalidPlayError;
+
+impl std::error::Error for InvalidPlayError {}
+
+impl Display for InvalidPlayError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Can't play there!")
+    }
+}
+
 pub struct Player {
     move_as: Move,
 }
@@ -120,8 +131,21 @@ impl Player {
     pub fn new(move_as: Move) -> Player {
         Player { move_as }
     }
-    pub fn play(&mut self, board: &mut Board, row: usize, col: usize) {
-        board.set_at(self.move_as, (row, col));
+    pub fn play(
+        &mut self,
+        board: &mut Board,
+        row: usize,
+        col: usize,
+    ) -> Result<(), InvalidPlayError> {
+        if row >= board.current.len() || col >= board.current.len() {
+            return Err(InvalidPlayError {});
+        }
+
+        let current_move = board.current[row][col];
+        match current_move {
+            None => Ok(board.set_at(self.move_as, (row, col))),
+            Some(..) => Err(InvalidPlayError {}),
+        }
     }
 }
 
@@ -129,7 +153,7 @@ impl Player {
 mod tests {
     use std::vec;
 
-    use crate::{Board, Move, Player};
+    use crate::{Board, InvalidPlayError, Move, Player};
 
     fn x() -> Option<Move> {
         Some(Move::X)
@@ -139,18 +163,41 @@ mod tests {
     }
 
     #[test]
-    fn test_play_at_position() {
+    fn test_play_at_position() -> Result<(), InvalidPlayError> {
         let mut board = Board::new();
         let mut x = Player::new(Move::X);
-        x.play(&mut board, 0, 0);
-        x.play(&mut board, 2, 1);
+        x.play(&mut board, 0, 0)?;
+        x.play(&mut board, 2, 1)?;
 
         let mut o = Player::new(Move::O);
-        o.play(&mut board, 1, 2);
+        o.play(&mut board, 1, 2)?;
 
         assert_eq!(board.current[0][0], Some(Move::X));
         assert_eq!(board.current[2][1], Some(Move::X));
         assert_eq!(board.current[1][2], Some(Move::O));
+        Ok(())
+    }
+
+    #[test]
+    fn test_play_at_occupied_position() -> Result<(), InvalidPlayError> {
+        let mut board = Board::new();
+        let mut x = Player::new(Move::X);
+        x.play(&mut board, 0, 0)?;
+        let result = x.play(&mut board, 0, 0);
+
+        assert!(result.is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn test_play_at_out_of_bounds() -> Result<(), InvalidPlayError> {
+        let mut board = Board::new();
+        let mut x = Player::new(Move::X);
+        let result = x.play(&mut board, 9, 0);
+        assert!(result.is_err());
+        let result = x.play(&mut board, 2, 9);
+        assert!(result.is_err());
+        Ok(())
     }
 
     #[test]

@@ -36,9 +36,13 @@ fn main() {
                 Some(row) => match col {
                     None => println!("bad: need a column number"),
                     Some(col) => {
-                        x.play(&mut board, row, col);
-                        bot_play(&mut board);
-                        println!("{}", board);
+                        match x.play(&mut board, row, col) {
+                            Err(err) => println!("{}", err),
+                            Ok(()) => {
+                                bot_play(&mut board);
+                                println!("{}", board);
+                            }
+                        };
                     }
                 },
             },
