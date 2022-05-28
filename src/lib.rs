@@ -1,6 +1,6 @@
 use std::{fmt::Display, iter};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Move {
     X,
     O,
@@ -98,15 +98,16 @@ impl Display for Board {
 }
 
 pub struct Player<'a> {
+    move_as: Move,
     board: &'a mut Board,
 }
 
 impl<'a> Player<'a> {
-    pub fn new(board: &'a mut Board) -> Player<'a> {
-        Player { board }
+    pub fn new(board: &'a mut Board, move_as: Move) -> Player<'a> {
+        Player { board, move_as }
     }
-    pub fn play(mut self, xo: Move, row: usize, col: usize) {
-        self.board.current[row][col] = Some(xo);
+    pub fn play(&mut self,  row: usize, col: usize) {
+        self.board.current[row][col] = Some(self.move_as);
     }
 }
 
