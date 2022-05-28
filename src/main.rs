@@ -26,6 +26,12 @@ fn main() {
         stdout().flush().ok();
         stdin().read_line(&mut input).ok();
 
+        if input == "clear\n" {
+            board = Board::new();
+            println!("{}", board);
+            continue;
+        }
+
         let coord: Result<Coord, ParseIntError> =
             input.split_whitespace().map(|s| s.parse()).collect();
 
@@ -40,7 +46,7 @@ fn main() {
                             Err(err) => println!("{}", err),
                             Ok(()) => {
                                 bot_play(&mut board);
-                                println!("{}", board);
+                                println!("\n{}", board);
                             }
                         };
                     }
