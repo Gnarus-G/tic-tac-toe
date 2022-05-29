@@ -1,7 +1,7 @@
 use tic_tac_toe::{game::game_loop, Board, Move};
 
 fn main() {
-    game_loop(&bot_play)
+    game_loop(Board::new(), &|_| {}, &bot_play)
 }
 
 fn bot_play(board: &mut Board) {

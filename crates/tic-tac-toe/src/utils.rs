@@ -12,12 +12,22 @@ pub mod error {
 }
 
 pub mod input {
+    use std::num::ParseIntError;
+
+    #[derive(Debug)]
     pub struct Coord(pub Option<usize>, pub Option<usize>);
 
     impl FromIterator<usize> for Coord {
         fn from_iter<I: IntoIterator<Item = usize>>(iter: I) -> Self {
             let mut i = iter.into_iter();
             Coord(i.next(), i.next())
+        }
+    }
+
+    impl Coord {
+        pub fn parse(input: &str) -> Result<Coord, ParseIntError> {
+            input.split_whitespace()
+                .map(|s| s.parse()).collect()
         }
     }
 }

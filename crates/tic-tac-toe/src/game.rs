@@ -1,9 +1,12 @@
-use std::{io::{ stdin, stdout, Write}, num::ParseIntError};
+use std::io::{stdin, stdout, Write};
 
-use crate::{Board, Player, Move, utils::input::Coord};
+use crate::{utils::input::Coord, Board, Move, Player};
 
-pub fn game_loop(their_play: &dyn Fn(&mut Board)) {
-    let mut board = Board::new();
+pub fn game_loop(
+    mut board: Board,
+    send_our_play: &dyn Fn((usize, usize)),
+    recieve_their_play: &dyn Fn(&mut Board),
+) {
     let mut x = Player::new(Move::X);
 
     println!("{}", board);
@@ -20,10 +23,7 @@ pub fn game_loop(their_play: &dyn Fn(&mut Board)) {
             continue;
         }
 
-        let coord: Result<Coord, ParseIntError> =
-            input.split_whitespace().map(|s| s.parse()).collect();
-
-        match coord {
+        match Coord::parse(&input) {
             Err(err) => println!("bad: {:?}", err),
             Ok(Coord(row, col)) => match row {
                 None => println!("bad: row and column numbers are required, (e.g 1 1)"),
@@ -33,7 +33,9 @@ pub fn game_loop(their_play: &dyn Fn(&mut Board)) {
                         match x.play(&mut board, row, col) {
                             Err(err) => println!("{}", err),
                             Ok(()) => {
-                                their_play(&mut board);
+                                println!("\n{}", board);
+                                send_our_play((row, col));
+                                recieve_their_play(&mut board);
                                 println!("\n{}", board);
                             }
                         };
@@ -43,5 +45,3 @@ pub fn game_loop(their_play: &dyn Fn(&mut Board)) {
         }
     }
 }
-
-
