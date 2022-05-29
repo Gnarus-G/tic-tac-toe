@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 tic-tac-toe = { path = "../tic-tac-toe" }
+clap = { version = "*", features = ["derive"] }
