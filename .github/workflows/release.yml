@@ -13,13 +13,13 @@ jobs:
       matrix:
         include:
           - target: x86_64-pc-windows-gnu
-            package: net-tac-toe
+            package: crates/net-tac-toe/src
             archive: zip
           - target: x86_64-unknown-linux-musl
-            package: net-tac-toe
+            package: crates/net-tac-toe
             archive: tar.gz tar.xz
           - target: x86_64-apple-darwin
-            package: net-tac-toe
+            package: crates/net-tac-toe
             archive: zip
     steps:
       - uses: actions/checkout@master
