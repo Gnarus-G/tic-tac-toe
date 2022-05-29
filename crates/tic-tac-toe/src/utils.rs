@@ -14,6 +14,8 @@ pub mod error {
 pub mod input {
     use std::num::ParseIntError;
 
+    use crate::Move;
+
     #[derive(Debug)]
     pub struct Coord(pub Option<usize>, pub Option<usize>);
 
@@ -26,8 +28,25 @@ pub mod input {
 
     impl Coord {
         pub fn parse(input: &str) -> Result<Coord, ParseIntError> {
-            input.split_whitespace()
-                .map(|s| s.parse()).collect()
+            input.split_whitespace().map(|s| s.parse()).collect()
+        }
+    }
+
+    pub struct Play(pub Move, pub usize, pub usize);
+
+    impl Play {
+        pub fn from(input: &str, move_as: Move) -> Option<Play> {
+            let result = input.split_whitespace().map(|s| s.parse()).collect();
+            match result {
+                Err(_) => None,
+                Ok(Coord(row, col)) => match row {
+                    None => None,
+                    Some(row) => match col {
+                        None => None,
+                        Some(col) => Some(Play(move_as, row, col))
+                    },
+                },
+            }
         }
     }
 }

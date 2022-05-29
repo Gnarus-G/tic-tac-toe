@@ -1,10 +1,11 @@
-use tic_tac_toe::{game::game_loop, Board, Move};
+use tic_tac_toe::{game::GameInstance, utils::input::Play, Board, Move};
 
 fn main() {
-    game_loop(Board::new(), &|_| {}, &bot_play)
+    let board = Board::new();
+    GameInstance::new(board, Move::X, |_| {}, bot_play).run();
 }
 
-fn bot_play(board: &mut Board) {
+fn bot_play(board: &Board) -> Option<Play> {
     let mut move_at = (0, 0);
     'outer: for (i, row) in board.rows().enumerate() {
         for (j, m) in row.iter().enumerate() {
@@ -14,5 +15,6 @@ fn bot_play(board: &mut Board) {
             }
         }
     }
-    return board.set_at(Move::O, move_at);
+    let (row, col) = move_at;
+    Some(Play(Move::O, row, col))
 }

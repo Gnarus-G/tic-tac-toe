@@ -1,47 +1,67 @@
 use std::io::{stdin, stdout, Write};
 
-use crate::{utils::input::Coord, Board, Move, Player};
+use crate::{
+    utils::input::{Coord, Play},
+    Board, Move, Player,
+};
 
-pub fn game_loop(
-    mut board: Board,
-    send_our_play: &dyn Fn((usize, usize)),
-    recieve_their_play: &dyn Fn(&mut Board),
-) {
-    let mut x = Player::new(Move::X);
+pub struct GameInstance<Sender: Fn((usize, usize)), Reciever: Fn(&Board) -> Option<Play>> {
+    pub board: Board,
+    this_player: Player,
+    send_play: Sender,
+    recieve_their_play: Reciever,
+}
 
-    println!("{}", board);
-
-    loop {
-        let mut input = String::new();
-        print!("move > ");
-        stdout().flush().ok();
-        stdin().read_line(&mut input).ok();
-
-        if input == "clear\n" {
-            board = Board::new();
-            println!("{}", board);
-            continue;
+impl<S: Fn((usize, usize)), R: Fn(&Board) -> Option<Play>> GameInstance<S, R> {
+    pub fn new(board: Board, move_as: Move, s: S, r: R) -> Self {
+        GameInstance {
+            board,
+            this_player: Player::new(move_as),
+            send_play: s,
+            recieve_their_play: r,
         }
+    }
 
-        match Coord::parse(&input) {
-            Err(err) => println!("bad: {:?}", err),
-            Ok(Coord(row, col)) => match row {
-                None => println!("bad: row and column numbers are required, (e.g 1 1)"),
-                Some(row) => match col {
-                    None => println!("bad: need a column number"),
-                    Some(col) => {
-                        match x.play(&mut board, row, col) {
-                            Err(err) => println!("{}", err),
-                            Ok(()) => {
-                                println!("\n{}", board);
-                                send_our_play((row, col));
-                                recieve_their_play(&mut board);
-                                println!("\n{}", board);
-                            }
-                        };
-                    }
+    pub fn run(&mut self) {
+        println!("{}", self.board);
+
+        loop {
+            let mut input = String::new();
+            print!("move > ");
+            stdout().flush().ok();
+            stdin().read_line(&mut input).ok();
+
+            if input == "clear\n" {
+                self.board = Board::new();
+                println!("{}", self.board);
+                continue;
+            }
+
+            match Coord::parse(&input) {
+                Err(err) => println!("bad: {:?}", err),
+                Ok(Coord(row, col)) => match row {
+                    None => println!("bad: row and column numbers are required, (e.g 1 1)"),
+                    Some(row) => match col {
+                        None => println!("bad: need a column number"),
+                        Some(col) => {
+                            match self.this_player.play(&mut self.board, row, col) {
+                                Err(err) => println!("{}", err),
+                                Ok(()) => {
+                                    println!("\n{}", self.board);
+                                    (self.send_play)((row, col));
+                                    match (self.recieve_their_play)(&self.board) {
+                                        None => println!("their play was invalid..."),
+                                        Some(Play(m, row, col)) => {
+                                            self.board.set_at(m, (row, col));
+                                            println!("\n{}", self.board);
+                                        }
+                                    }
+                                }
+                            };
+                        }
+                    },
                 },
-            },
+            }
         }
     }
 }

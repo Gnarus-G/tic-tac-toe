@@ -1,10 +1,12 @@
 use std::{
     env::args,
-    io::{BufRead, BufReader, Read, Write},
+    io::{BufRead, BufReader, Write},
     net::{TcpListener, TcpStream},
 };
-use tic_tac_toe::*;
-use tic_tac_toe::{game::game_loop, utils::input::Coord};
+use tic_tac_toe::game::GameInstance;
+use tic_tac_toe::{utils::input::Play, *};
+
+const PORT: u16 = 1234;
 
 fn main() -> std::io::Result<()> {
     if choose_be_server() {
@@ -12,12 +14,12 @@ fn main() -> std::io::Result<()> {
         return as_server();
     } else {
         println!("looking for someone challenge");
-        return as_client();
+        return as_client("localhost");
     }
 }
 
 fn as_server() -> std::io::Result<()> {
-    let listener = TcpListener::bind("127.0.0.1:1234")?;
+    let listener = TcpListener::bind(format!("localhost:{}", PORT))?;
 
     for stream in listener.incoming() {
         handle_client(stream?)?;
@@ -29,25 +31,23 @@ fn as_server() -> std::io::Result<()> {
 fn handle_client(stream: TcpStream) -> std::io::Result<()> {
     println!("|- challenger found!\n");
 
-    game_loop(Board::new(), &|t| send_our_play(t, &stream), &|board| {
-        if let Err(err) = capture_their_play(board, &stream) {
-            println!("{}", err);
-        }
-    });
+    GameInstance::new(
+        Board::new(),
+        Move::X,
+        |t| send_our_play(t, &stream),
+        |_| recieve_their_play(Move::O, &stream),
+    ).run();
 
     Ok(())
 }
 
-fn capture_their_play(board: &mut Board, stream: &TcpStream) -> std::io::Result<()> {
+fn recieve_their_play(m: Move, stream: &TcpStream) -> Option<Play> {
     println!("waiting for their play...\n");
     let mut input = String::new();
-    BufReader::with_capacity(5, stream).read_line(&mut input)?;
-    let coord = Coord::parse(&input);
-    match coord {
-        Err(err) => println!("error parsing their move: {}", err),
-        Ok(Coord(row, col)) => board.set_at(Move::O, (row.unwrap(), col.unwrap())),
-    }
-    Ok(())
+    BufReader::with_capacity(5, stream)
+        .read_line(&mut input)
+        .ok();
+    Play::from(&input, m)
 }
 
 fn send_our_play((row, col): (usize, usize), mut destination: &TcpStream) {
@@ -57,20 +57,24 @@ fn send_our_play((row, col): (usize, usize), mut destination: &TcpStream) {
     }
 }
 
-fn as_client() -> std::io::Result<()> {
-    let stream = TcpStream::connect("127.0.0.1:1234")?;
+fn as_client(server_ip: &str) -> std::io::Result<()> {
+    let stream = TcpStream::connect(format!("{}:{}", server_ip, PORT))?;
     let mut board = Board::new();
 
     println!("|- challenger found!\n");
     println!("{}", board);
 
-    capture_their_play(&mut board, &stream)?;
+    match recieve_their_play(Move::X, &stream) {
+        None => println!("their play was invalid..."),
+        Some(Play(m, tr, tc)) => board.set_at(m, (tr, tc))
+    };
 
-    game_loop(board, &|t| send_our_play(t, &stream), &|board| {
-        if let Err(err) = capture_their_play(board, &stream) {
-            println!("{}", err);
-        }
-    });
+    GameInstance::new(
+        board,
+        Move::O,
+        |t| send_our_play(t, &stream),
+        |_| recieve_their_play(Move::O, &stream),
+    ).run();
 
     Ok(())
 }
