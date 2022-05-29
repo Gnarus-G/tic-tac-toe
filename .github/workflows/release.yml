@@ -11,10 +11,13 @@ jobs:
       matrix:
         include:
           - target: x86_64-pc-windows-gnu
+            package: tic-tac-toe net-tac-toe
             archive: zip
           - target: x86_64-unknown-linux-musl
+            package: tic-tac-toe net-tac-toe
             archive: tar.gz tar.xz
           - target: x86_64-apple-darwin
+            package: tic-tac-toe net-tac-toe
             archive: zip
     steps:
       - uses: actions/checkout@master
@@ -24,4 +27,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           RUSTTARGET: ${{ matrix.target }}
+          SRC_DIR: ${{ matrix.package }}
           ARCHIVE_TYPES: ${{ matrix.archive }}
