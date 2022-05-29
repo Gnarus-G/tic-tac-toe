@@ -6,11 +6,18 @@ pub enum Move {
     O,
 }
 
-impl Display for Move {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl Move {
+    fn to_string(&self, is_in_match: bool) -> &str {
+        if is_in_match {
+            return match self {
+                Move::X => "𝙭",
+                Move::O => "◍",
+            };
+        };
+
         match self {
-            Move::X => write!(f, "X"),
-            Move::O => write!(f, "O"),
+            Move::X => "𝑥",
+            Move::O => "◯",
         }
     }
 }
@@ -35,7 +42,7 @@ impl Board {
         self.current.iter()
     }
 
-    pub fn check_lines(&mut self) -> Vec<Vec<(usize, usize)>> {
+    pub fn check_lines(&self) -> Vec<Vec<(usize, usize)>> {
         let row_indeces_iter = || 0..self.current.len();
         let colum_indeces_iter = || 0..self.current[0].len();
         let is_all_x = |line: &Vec<(usize, usize)>| {
@@ -81,6 +88,16 @@ impl Board {
 impl Display for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut disp = String::new();
+        let is_matched = |i, j| {
+            for line in self.check_lines() {
+                for (lr, lc) in line {
+                    if i == lr && j == lc {
+                        return true;
+                    }
+                }
+            }
+            false
+        };
 
         //write column number labels
         disp.push_str("  |");
@@ -99,10 +116,10 @@ impl Display for Board {
         //write each row starting with row index label
         for (i, row) in self.current.iter().enumerate() {
             disp.push_str(&format!(" {}|", i));
-            for m in row {
+            for (j, m) in row.iter().enumerate() {
                 match m {
-                    None => disp.push_str(" _ "),
-                    Some(m) => disp.push_str(&format!(" {} ", m)),
+                    None => disp.push_str(" ⬚ "),
+                    Some(m) => disp.push_str(&format!(" {} ", m.to_string(is_matched(i, j))))
                 }
             }
             disp.push('\n');
@@ -220,7 +237,7 @@ mod tests {
 
     #[test]
     fn test_no_winning_lines_on_blank_board() {
-        let mut board = Board::new();
+        let board = Board::new();
         let no_lines: Vec<Vec<(usize, usize)>> = vec![];
         assert_eq!(board.check_lines(), no_lines);
     }
