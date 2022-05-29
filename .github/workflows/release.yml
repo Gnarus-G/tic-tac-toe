@@ -12,6 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
+            # net tac toe single player program
           - target: x86_64-pc-windows-gnu
             package: crates/net-tac-toe
             archive: zip
@@ -21,7 +22,7 @@ jobs:
           - target: x86_64-apple-darwin
             package: crates/net-tac-toe
             archive: zip
-            
+            # tic tac toe single player program
           - target: x86_64-pc-windows-gnu
             package: crates/tic-tac-toe
             archive: zip
