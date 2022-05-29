@@ -1,4 +1,5 @@
 pub mod utils;
+pub mod game;
 
 use std::{fmt::Display, iter};
 
