@@ -3,16 +3,7 @@ use std::{
     num::ParseIntError,
 };
 
-use tic_tac_toe::{Board, Move, Player};
-
-struct Coord(Option<usize>, Option<usize>);
-
-impl FromIterator<usize> for Coord {
-    fn from_iter<I: IntoIterator<Item = usize>>(iter: I) -> Self {
-        let mut i = iter.into_iter();
-        Coord(i.next(), i.next())
-    }
-}
+use tic_tac_toe::{Board, Move, Player, utils::input::Coord};
 
 fn main() {
     let mut board = Board::new();

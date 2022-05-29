@@ -1,4 +1,8 @@
+pub mod utils;
+
 use std::{fmt::Display, iter};
+
+use utils::error::InvalidPlayError;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Move {
@@ -119,24 +123,13 @@ impl Display for Board {
             for (j, m) in row.iter().enumerate() {
                 match m {
                     None => disp.push_str(" ⬚ "),
-                    Some(m) => disp.push_str(&format!(" {} ", m.to_string(is_matched(i, j))))
+                    Some(m) => disp.push_str(&format!(" {} ", m.to_string(is_matched(i, j)))),
                 }
             }
             disp.push('\n');
         }
 
         write!(f, "{}", disp)
-    }
-}
-
-#[derive(Debug)]
-pub struct InvalidPlayError;
-
-impl std::error::Error for InvalidPlayError {}
-
-impl Display for InvalidPlayError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Can't play there!")
     }
 }
 
