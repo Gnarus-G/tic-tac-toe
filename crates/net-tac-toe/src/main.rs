@@ -1,10 +1,11 @@
+mod io;
+
 use clap::Parser;
-use std::{
-    io::{BufRead, BufReader, Write},
-    net::{TcpListener, TcpStream},
-};
+use std::net::{TcpListener, TcpStream};
 use tic_tac_toe::game::GameInstance;
 use tic_tac_toe::{utils::input::Play, *};
+
+use crate::io::{recieve_board_size, recieve_their_play, send_board_size, send_our_play};
 
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
@@ -40,48 +41,39 @@ fn main() -> std::io::Result<()> {
 fn as_server(address: &str) -> std::io::Result<()> {
     let listener = TcpListener::bind(address)?;
 
-    fn handle_client(stream: TcpStream) -> std::io::Result<()> {
+    let handle_client = |stream: TcpStream| -> std::io::Result<()> {
         println!("|- challenger found!\n");
 
+        let board_size = promptly::prompt_default("Enter a board size", 3usize)
+            .expect("Couldn't read board size!");
+
+        send_board_size(board_size, &stream);
+
         GameInstance::new(
-            Board::new(),
+            Board::with_size(board_size),
             Move::X,
             |t| send_our_play(t, &stream),
             |_| recieve_their_play(Move::O, &stream),
         )
         .run();
 
-        Ok(())
-    }
+        return Ok(());
+    };
 
     for stream in listener.incoming() {
         handle_client(stream?)?;
     }
 
-    Ok(())
-}
-
-fn recieve_their_play(m: Move, stream: &TcpStream) -> Option<Play> {
-    println!("waiting for their play...\n");
-    let mut input = String::new();
-    BufReader::with_capacity(5, stream)
-        .read_line(&mut input)
-        .ok();
-    Play::from(&input, m)
-}
-
-fn send_our_play((row, col): (usize, usize), mut destination: &TcpStream) {
-    match writeln!(destination, "{} {}", row, col) {
-        Err(err) => println!("{}", err),
-        Ok(()) => println!("our play sent successfully!"),
-    }
+    return Ok(());
 }
 
 fn as_client(address: &str) -> std::io::Result<()> {
     let stream = TcpStream::connect(address)?;
-    let mut board = Board::new();
-
     println!("|- challenger found!\n");
+
+    let size = recieve_board_size(&stream);
+    let mut board = Board::with_size(size);
+
     println!("{}", board);
 
     match recieve_their_play(Move::X, &stream) {
