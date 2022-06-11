@@ -11,27 +11,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-            # net tac toe single player program
-          - target: x86_64-pc-windows-gnu
-            package: crates/net-tac-toe
-            archive: zip
-          - target: x86_64-unknown-linux-musl
-            package: crates/net-tac-toe
-            archive: tar.gz tar.xz
-          - target: x86_64-apple-darwin
-            package: crates/net-tac-toe
-            archive: zip
-            # tic tac toe single player program
-          - target: x86_64-pc-windows-gnu
-            package: crates/tic-tac-toe
-            archive: zip
-          - target: x86_64-unknown-linux-musl
-            package: crates/tic-tac-toe
-            archive: tar.gz tar.xz
-          - target: x86_64-apple-darwin
-            package: crates/tic-tac-toe
-            archive: zip
+        target: [x86_64-pc-windows-gnu, x86_64-unknown-linux-musl]
+        package: [crates/tic-tac-toe, crates/net-tac-toe]
+        archive: [zip, tar.gz]
     steps:
       - uses: actions/checkout@master
       - name: Compile and release
