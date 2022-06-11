@@ -93,9 +93,8 @@ fn as_client(address: &str) -> std::io::Result<()> {
         board,
         Move::O,
         |t| send_our_play(t, &stream),
-        |_| recieve_their_play(Move::O, &stream),
+        |_| recieve_their_play(Move::X, &stream),
     )
     .run();
-
     Ok(())
 }
