@@ -109,7 +109,7 @@ checksum = "349d5a591cd28b49e1d1037471617a32ddcda5731b99419008085f72d5a53836"
 
 [[package]]
 name = "net-tac-toe"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "clap",
  "tic-tac-toe",
@@ -197,7 +197,10 @@ checksum = "b1141d4d61095b28419e22cb0bbf02755f5e54e0526f97f1e3d1d160e60885fb"
 
 [[package]]
 name = "tic-tac-toe"
-version = "0.1.0"
+version = "0.1.1"
+dependencies = [
+ "clap",
+]
 
 [[package]]
 name = "unicode-ident"
