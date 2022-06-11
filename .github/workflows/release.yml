@@ -5,21 +5,93 @@ on:
     types: [created]
 
 jobs:
-  release:
-    name: release ${{ matrix.target }}
-    runs-on: ubuntu-latest
+  build:
     strategy:
-      fail-fast: false
       matrix:
-        target: [x86_64-pc-windows-gnu, x86_64-unknown-linux-musl]
-        package: [crates/net-tac-toe, crates/tic-tac-toe]
+        crate: [tic-tac-toe, net-tac-toe]
+
+    runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@master
-      - name: Compile and release
-        uses: rust-build/rust-build.action@v1.3.2
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - name: Install latest rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          default: true
+          override: true
+
+      - name: Build
+        run: cargo build --all --release && strip target/release/${{ matrix.crate }} && mv target/release/${{ matrix.crate }} target/release/${{ matrix.crate }}_amd64
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            target/release/${{ matrix.crate }}_amd64
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-win:
+    strategy:
+      matrix:
+        crate: [tic-tac-toe, net-tac-toe]
+
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - name: Install latest rust toolchain
+        uses: actions-rs/toolchain@v1
         with:
-          RUSTTARGET: ${{ matrix.target }}
-          SRC_DIR: ${{ matrix.package }}
-          EXTRA_FILES: "README.md"
+          toolchain: stable
+          default: true
+          override: true
+
+      - name: Build
+        run: cargo build --all --release
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: target/release/${{ matrix.crate }}.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-mac:
+    strategy:
+      matrix:
+        crate: [tic-tac-toe, net-tac-toe]
+
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - name: Install latest rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: x86_64-apple-darwin
+          default: true
+          override: true
+
+      - name: Build for mac
+        run: cargo build --all --release && strip target/release/${{ matrix.crate }} && mv target/release/${{ matrix.crate }} target/release/${{ matrix.crate }}_darwin
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            target/release/${{ matrix.crate }}_darwin
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
