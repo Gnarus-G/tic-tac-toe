@@ -1,7 +1,18 @@
+use clap::Parser;
 use tic_tac_toe::{game::GameInstance, utils::input::Play, Board, Move};
 
+#[derive(Parser)]
+#[clap(author, version, about, long_about = None)]
+/// Play tic-tac-toe against a very stupid bot.
+struct Args {
+    /// Size of the board.
+    #[clap(short, long, default_value = "3")]
+    size: usize,
+}
+
 fn main() {
-    let board = Board::new();
+    let args = Args::parse();
+    let board = Board::with_size(args.size);
     GameInstance::new(board, Move::X, |_| {}, bot_play).run();
 }
 

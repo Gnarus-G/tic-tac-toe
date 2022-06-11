@@ -32,7 +32,7 @@ impl<S: Fn((usize, usize)), R: Fn(&Board) -> Option<Play>> GameInstance<S, R> {
             stdin().read_line(&mut input).ok();
 
             if input == "clear\n" {
-                self.board = Board::new();
+                self.board = Board::with_size(self.board.size());
                 println!("{}", self.board);
                 continue;
             }

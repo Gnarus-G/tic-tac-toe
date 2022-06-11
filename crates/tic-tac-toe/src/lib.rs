@@ -1,5 +1,5 @@
-pub mod utils;
 pub mod game;
+pub mod utils;
 
 use std::{fmt::Display, iter};
 
@@ -29,22 +29,38 @@ impl Move {
 
 #[derive(Debug)]
 pub struct Board {
-    current: [[Option<Move>; 3]; 3],
+    current: Vec<Vec<Option<Move>>>,
 }
 
 impl Board {
+    /// Initialize a typical board (3 x 3).
     pub fn new() -> Board {
         Board {
-            current: [[None, None, None], [None, None, None], [None, None, None]],
+            current: vec![
+                vec![None, None, None],
+                vec![None, None, None],
+                vec![None, None, None],
+            ],
         }
+    }
+
+    /// Initialize an (n x n) board.
+    pub fn with_size(n: usize) -> Board {
+        let row = || iter::from_fn(|| Some(None)).take(n).collect();
+        let current = iter::from_fn(|| Some(row())).take(n).collect();
+        return Board { current };
+    }
+
+    pub fn size(&self) -> usize {
+        return self.current.len();
     }
 
     pub fn set_at(&mut self, m: Move, (row, col): (usize, usize)) {
         self.current[row][col] = Some(m);
     }
 
-    pub fn rows(&self) -> std::slice::Iter<[Option<Move>; 3]> {
-        self.current.iter()
+    pub fn rows(&self) -> std::slice::Iter<Vec<Option<Move>>> {
+        return self.current.iter();
     }
 
     pub fn check_lines(&self) -> Vec<Vec<(usize, usize)>> {
@@ -174,6 +190,15 @@ mod tests {
     }
 
     #[test]
+    fn test_n_x_n_board_initialization() {
+        let board = Board::with_size(4);
+        assert_eq!(board.current.len(), 4);
+        for i in 0..4 {
+            assert_eq!(board.current[i].len(), 4);
+        }
+    }
+
+    #[test]
     fn test_play_at_position() -> Result<(), InvalidPlayError> {
         let mut board = Board::new();
         let mut x = Player::new(Move::X);
@@ -216,15 +241,27 @@ mod tests {
         let mut board = Board::new();
         assert!(!board.is_complete());
 
-        board.current = [[x(), x(), x()], [x(), x(), x()], [x(), x(), x()]];
+        board.current = vec![
+            vec![x(), x(), x()],
+            vec![x(), x(), x()],
+            vec![x(), x(), x()],
+        ];
 
         assert!(board.is_complete());
 
-        board.current = [[x(), None, x()], [x(), x(), x()], [x(), x(), x()]];
+        board.current = vec![
+            vec![x(), None, x()],
+            vec![x(), x(), x()],
+            vec![x(), x(), x()],
+        ];
 
         assert!(!board.is_complete());
 
-        board.current = [[x(), x(), x()], [x(), None, x()], [x(), x(), x()]];
+        board.current = vec![
+            vec![x(), x(), x()],
+            vec![x(), None, x()],
+            vec![x(), x(), x()],
+        ];
 
         assert!(!board.is_complete());
     }
@@ -240,10 +277,18 @@ mod tests {
     fn test_winning_rows() {
         let mut board = Board::new();
 
-        board.current = [[x(), x(), x()], [o(), o(), x()], [o(), x(), o()]];
+        board.current = vec![
+            vec![x(), x(), x()],
+            vec![o(), o(), x()],
+            vec![o(), x(), o()],
+        ];
         assert_eq!(board.check_lines(), vec![vec![(0, 0), (0, 1), (0, 2)]]);
 
-        board.current = [[o(), x(), o()], [o(), o(), x()], [x(), x(), x()]];
+        board.current = vec![
+            vec![o(), x(), o()],
+            vec![o(), o(), x()],
+            vec![x(), x(), x()],
+        ];
         assert_eq!(board.check_lines(), vec![vec![(2, 0), (2, 1), (2, 2)]]);
     }
 
@@ -251,17 +296,29 @@ mod tests {
     fn test_winning_lines_columns() {
         let mut board = Board::new();
 
-        board.current = [[o(), x(), x()], [x(), x(), o()], [o(), x(), x()]];
+        board.current = vec![
+            vec![o(), x(), x()],
+            vec![x(), x(), o()],
+            vec![o(), x(), x()],
+        ];
         assert_eq!(board.check_lines(), vec![vec![(0, 1), (1, 1), (2, 1)]]);
 
-        board.current = [[o(), x(), x()], [x(), x(), o()], [o(), x(), x()]];
+        board.current = vec![
+            vec![o(), x(), x()],
+            vec![x(), x(), o()],
+            vec![o(), x(), x()],
+        ];
         assert_eq!(board.check_lines(), vec![vec![(0, 1), (1, 1), (2, 1)]]);
     }
     #[test]
     fn test_winning_column_and_row() {
         let mut board = Board::new();
 
-        board.current = [[o(), x(), x()], [o(), o(), x()], [x(), x(), x()]];
+        board.current = vec![
+            vec![o(), x(), x()],
+            vec![o(), o(), x()],
+            vec![x(), x(), x()],
+        ];
         assert_eq!(
             board.check_lines(),
             vec![vec![(2, 0), (2, 1), (2, 2)], vec![(0, 2), (1, 2), (2, 2)]]
@@ -271,14 +328,22 @@ mod tests {
     fn test_winning_left_diagonal() {
         let mut board = Board::new();
 
-        board.current = [[o(), x(), x()], [o(), o(), x()], [x(), o(), o()]];
+        board.current = vec![
+            vec![o(), x(), x()],
+            vec![o(), o(), x()],
+            vec![x(), o(), o()],
+        ];
         assert_eq!(board.check_lines(), vec![vec![(0, 0), (1, 1), (2, 2)]]);
     }
 
     #[test]
     fn test_winning_right_diagonal() {
         let mut board = Board::new();
-        board.current = [[o(), x(), x()], [o(), x(), x()], [x(), o(), o()]];
+        board.current = vec![
+            vec![o(), x(), x()],
+            vec![o(), x(), x()],
+            vec![x(), o(), o()],
+        ];
         assert_eq!(board.check_lines(), vec![vec![(2, 0), (1, 1), (0, 2)]]);
     }
 }
