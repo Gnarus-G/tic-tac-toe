@@ -12,8 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         target: [x86_64-pc-windows-gnu, x86_64-unknown-linux-musl]
-        package: [crates/net-tac-toe]
-        archive: [zip, tar.gz]
+        package: [crates/net-tac-toe, crates/tic-tac-toe]
     steps:
       - uses: actions/checkout@master
       - name: Compile and release
@@ -23,4 +22,4 @@ jobs:
         with:
           RUSTTARGET: ${{ matrix.target }}
           SRC_DIR: ${{ matrix.package }}
-          ARCHIVE_TYPES: ${{ matrix.archive }}
+          EXTRA_FILES: "README.md"
